@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Citas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="auth-layout">
+        <section class="brand-panel" aria-label="Presentación del sistema">
+            <div class="brand-mark" aria-hidden="true">+</div>
+            <p class="eyebrow">Atención organizada</p>
+            <h1>Sistema de<br>Gestión de Citas</h1>
+            <p class="brand-description">
+                Administra tus citas de forma sencilla, rápida y segura.
+            </p>
+            <div class="brand-decoration" aria-hidden="true"></div>
+        </section>
+
+        <section class="form-panel">
+            <div class="form-wrapper">
+                <div class="form-heading">
+                    <p class="eyebrow">Bienvenido</p>
+                    <h2 id="formTitle">Iniciar sesión</h2>
+                    <p id="formDescription">Ingresa tus datos para continuar.</p>
+                </div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="field">
+                        <label for="usuario">Usuario o correo electrónico</label>
+                        <input type="text" id="usuario" name="usuario"
+                               placeholder="Ej. juan.perez" autocomplete="username" required>
+                    </div>
+                    <div class="field">
+                        <label for="contrasena">Contraseña</label>
+                        <div class="password-field">
+                            <input type="password" id="contrasena" name="contrasena"
+                                   placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+                            <button type="button" class="password-toggle" aria-label="Mostrar contraseña"
+                                    aria-controls="contrasena"></button>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="recordarme">
+                            <span>Recordarme</span>
+                        </label>
+                        <button type="button" class="text-button" data-view="recovery">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+                    <button class="primary-button" type="submit">Ingresar</button>
+                    <p class="switch-text">¿Aún no tienes una cuenta?
+                        <button type="button" class="text-button" data-view="register">Crear cuenta</button>
+                    </p>
+                </form>
+
+                <form id="registerForm" class="auth-form is-hidden">
+                    <div class="field">
+                        <label for="nombre">Nombre completo</label>
+                        <input type="text" id="nombre" name="nombre" placeholder="Ej. Juan Pérez"
+                               autocomplete="name" required>
+                    </div>
+                    <div class="field">
+                        <label for="registroCorreo">Correo electrónico</label>
+                        <input type="email" id="registroCorreo" name="correo" placeholder="nombre@ejemplo.com"
+                               autocomplete="email" required>
+                    </div>
+                    <div class="field">
+                        <label for="registroContrasena">Contraseña</label>
+                        <div class="password-field">
+                            <input type="password" id="registroContrasena" name="contrasena"
+                                   placeholder="Mínimo 8 caracteres" minlength="8" autocomplete="new-password" required>
+                            <button type="button" class="password-toggle" aria-label="Mostrar contraseña"
+                                    aria-controls="registroContrasena"></button>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="confirmarContrasena">Confirmar contraseña</label>
+                        <div class="password-field">
+                            <input type="password" id="confirmarContrasena" name="confirmarContrasena"
+                                   placeholder="Repite tu contraseña" minlength="8" autocomplete="new-password" required>
+                            <button type="button" class="password-toggle" aria-label="Mostrar contraseña"
+                                    aria-controls="confirmarContrasena"></button>
+                        </div>
+                    </div>
+                    <button class="primary-button" type="submit">Crear cuenta</button>
+                    <p class="switch-text">¿Ya tienes una cuenta?
+                        <button type="button" class="text-button" data-view="login">Iniciar sesión</button>
+                    </p>
+                </form>
+
+                <form id="recoveryForm" class="auth-form is-hidden">
+                    <div class="recovery-icon" aria-hidden="true">✉</div>
+                    <p class="form-help">Te enviaremos instrucciones para restablecer tu contraseña.</p>
+                    <div class="field">
+                        <label for="recuperacionCorreo">Correo electrónico</label>
+                        <input type="email" id="recuperacionCorreo" name="correo"
+                               placeholder="nombre@ejemplo.com" autocomplete="email" required>
+                    </div>
+                    <button class="primary-button" type="submit">Enviar instrucciones</button>
+                    <p class="switch-text">
+                        <button type="button" class="text-button" data-view="login">Volver a iniciar sesión</button>
+                    </p>
+                </form>
+
+                <p id="mensaje" class="message" role="status" aria-live="polite"></p>
+            </div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
