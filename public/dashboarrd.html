@@ -33,8 +33,8 @@
         }
 
         .contenedor {
-            padding: 40px;
-            max-width: 1100px;
+            padding: 36px 30px 48px;
+            max-width: 1040px;
             margin: auto;
         }
 
@@ -44,28 +44,82 @@
 
         .tarjetas {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 22px;
         }
 
         .tarjeta {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px #00000012;
+            grid-column: span 2;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 6px 16px #0000000d;
+            transition: transform .2s ease, box-shadow .2s ease;
+            text-align: center;
+        }
+
+        .tarjeta:nth-child(4) {
+            grid-column: 2 / span 2;
+        }
+
+        .tarjeta:nth-child(5) {
+            grid-column: 4 / span 2;
+        }
+
+        .tarjeta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 22px #00000018;
+        }
+
+        .icono-tarjeta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            margin-bottom: 16px;
+            border-radius: 9px;
+            background: #e0f2fe;
+            color: #355d78;
+            font-size: 22px;
+        }
+
+        .icono-tarjeta svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
         }
 
         .tarjeta h3 {
             color: #355d78;
+            margin: 0 0 10px;
+        }
+
+        .tarjeta p {
+            min-height: 42px;
+            margin: 0 0 18px;
         }
 
         .tarjeta button {
             background: #355d78;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 7px;
+            padding: 10px 18px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color .2s ease, box-shadow .2s ease, transform .2s ease;
+            margin: 0 auto;
+        }
+
+        .tarjeta button:hover {
+            background: #27465c;
+            box-shadow: 0 4px 10px #355d7840;
+            transform: translateY(-1px);
         }
 
         .salir {
@@ -75,6 +129,30 @@
             padding: 10px 18px;
             border-radius: 6px;
             cursor: pointer;
+        }
+
+        @media (max-width: 760px) {
+            .tarjetas {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .tarjeta,
+            .tarjeta:nth-child(4),
+            .tarjeta:nth-child(5) {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .tarjetas {
+                grid-template-columns: 1fr;
+            }
+
+            .tarjeta,
+            .tarjeta:nth-child(4),
+            .tarjeta:nth-child(5) {
+                grid-column: span 1;
+            }
         }
     </style>
 </head>
@@ -98,6 +176,14 @@
         <div class="tarjetas">
 
             <div class="tarjeta">
+                <div class="icono-tarjeta" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="9" cy="8" r="3"></circle>
+                        <path d="M3.5 19c.6-3 2.4-4.5 5.5-4.5s4.9 1.5 5.5 4.5"></path>
+                        <path d="M16 5.5a3 3 0 0 1 0 5.8"></path>
+                        <path d="M17 14.7c2 .5 3.2 1.9 3.5 4.3"></path>
+                    </svg>
+                </div>
                 <h3>Pacientes</h3>
                 <p>Registrar y consultar pacientes.</p>
                 <button type="button" id="ingresarPacientes">
@@ -106,6 +192,13 @@
             </div>
 
             <div class="tarjeta">
+                <div class="icono-tarjeta" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+                        <path d="M8 3v4M16 3v4M4 10h16"></path>
+                        <path d="M8 14h3M8 17h5"></path>
+                    </svg>
+                </div>
                 <h3>Gestión de citas</h3>
                 <p>Programar y consultar citas médicas.</p>
                 <button type="button" id="ingresarCitas">
@@ -114,6 +207,12 @@
             </div>
 
             <div class="tarjeta">
+                <div class="icono-tarjeta" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M5 4h14v16H5z"></path>
+                        <path d="M8 8h8M8 12h8M8 16h5"></path>
+                    </svg>
+                </div>
                 <h3>Historial</h3>
                 <p>Consultar el historial de citas.</p>
                 <button type="button" id="ingresarHistorial">
@@ -122,6 +221,14 @@
             </div>
 
             <div class="tarjeta">
+                <div class="icono-tarjeta" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="7" r="3"></circle>
+                        <path d="M5 20c.7-4 3-6 7-6s6.3 2 7 6"></path>
+                        <path d="M19 3v6"></path>
+                        <path d="M16 6h6"></path>
+                    </svg>
+                </div>
                 <h3>Médicos</h3>
                 <p>Registrar médicos y sus especialidades.</p>
                 <button type="button" id="ingresarMedicos">
@@ -130,6 +237,12 @@
             </div>
 
             <div class="tarjeta">
+                <div class="icono-tarjeta" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+                        <path d="M8 3v4M16 3v4M4 10h16M8 14h8M8 17h5"></path>
+                    </svg>
+                </div>
                 <h3>Calendario</h3>
                 <p>Visualizar citas por día, semana y mes.</p>
                 <button type="button" id="ingresarCalendario">
