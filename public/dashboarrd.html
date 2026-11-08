@@ -116,8 +116,24 @@
             <div class="tarjeta">
                 <h3>Historial</h3>
                 <p>Consultar el historial de citas.</p>
-                <button type="button" disabled>
-                    Próximamente
+                <button type="button" id="ingresarHistorial">
+                    Ingresar
+                </button>
+            </div>
+
+            <div class="tarjeta">
+                <h3>Médicos</h3>
+                <p>Registrar médicos y sus especialidades.</p>
+                <button type="button" id="ingresarMedicos">
+                    Ingresar
+                </button>
+            </div>
+
+            <div class="tarjeta">
+                <h3>Calendario</h3>
+                <p>Visualizar citas por día, semana y mes.</p>
+                <button type="button" id="ingresarCalendario">
+                    Ingresar
                 </button>
             </div>
 
@@ -133,6 +149,15 @@
         });
         document.getElementById("ingresarCitas").addEventListener("click", () => {
             window.location.href = "/citas.html";
+        });
+        document.getElementById("ingresarHistorial").addEventListener("click", () => {
+            window.location.href = "/historial.html";
+        });
+        document.getElementById("ingresarMedicos").addEventListener("click", () => {
+            window.location.href = "/medicos.html";
+        });
+        document.getElementById("ingresarCalendario").addEventListener("click", () => {
+            window.location.href = "/calendario.html";
         });
     </script>
 </body>

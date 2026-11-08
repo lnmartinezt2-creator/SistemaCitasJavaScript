@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Citas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #243b53; }
+        header { background: #355d78; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 22px; margin: 0; }
+        .contenedor { max-width: 1150px; margin: 35px auto; padding: 0 20px; }
+        .panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px #00000012; }
+        .busqueda { display: flex; gap: 12px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; }
+        button { background: #355d78; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; }
+        .volver { background: white; color: #355d78; }
+        .tabla { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #e8f0f6; }
+        .cancelada { color: #b91c1c; font-weight: bold; }
+        .completada { color: #166534; font-weight: bold; }
+        #mensaje { color: #b91c1c; }
+        @media (max-width: 650px) { header { flex-direction: column; gap: 15px; } .busqueda { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Historial de Citas</h1>
+        <button class="volver" id="volver" type="button">Volver al Dashboard</button>
+    </header>
+    <main class="contenedor">
+        <section class="panel">
+            <h2>Citas registradas</h2>
+            <div class="busqueda">
+                <input id="buscar" placeholder="Buscar por paciente o fecha">
+                <button id="buscarBtn" type="button">Buscar</button>
+            </div>
+            <p id="mensaje" role="status"></p>
+            <div class="tabla">
+                <table>
+                    <thead>
+                        <tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Motivo</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody id="listaCitas"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script>
+        const lista = document.getElementById("listaCitas");
+        const mensaje = document.getElementById("mensaje");
+        const escapar = (valor) => String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+        })[caracter]);
+
+        async function cargarHistorial() {
+            mensaje.textContent = "";
+            const buscar = encodeURIComponent(document.getElementById("buscar").value.trim());
+            const respuesta = await fetch(`/api/citas?buscar=${buscar}`);
+            if (!respuesta.ok) throw new Error("No se pudo cargar el historial de citas.");
+            const citas = await respuesta.json();
+            lista.innerHTML = citas.length
+                ? citas.map((cita) => `<tr>
+                    <td>${escapar(cita.paciente)}</td>
+                    <td>${escapar(cita.fecha)}</td>
+                    <td>${escapar(cita.hora)}</td>
+                    <td>${escapar(cita.motivo)}</td>
+                    <td class="${cita.estado.toLowerCase()}">${escapar(cita.estado)}</td>
+                </tr>`).join("")
+                : '<tr><td colspan="5">No hay citas registradas.</td></tr>';
+        }
+
+        document.getElementById("buscarBtn").addEventListener("click", cargarHistorial);
+        document.getElementById("buscar").addEventListener("input", cargarHistorial);
+        document.getElementById("volver").addEventListener("click", () => {
+            window.location.href = "/dashboarrd.html";
+        });
+        cargarHistorial().catch((error) => { mensaje.textContent = error.message; });
+    </script>
+</body>
+</html>

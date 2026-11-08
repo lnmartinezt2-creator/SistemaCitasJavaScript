@@ -14,6 +14,8 @@ function validarHora(hora) {
 function validarCita(body) {
     return Number.isInteger(Number(body.paciente_id)) &&
         Number(body.paciente_id) > 0 &&
+        Number.isInteger(Number(body.medico_id)) &&
+        Number(body.medico_id) > 0 &&
         validarFecha(body.fecha) &&
         validarHora(body.hora) &&
         typeof body.motivo === "string" &&
@@ -25,9 +27,13 @@ function verificarPaciente(id, callback) {
     db.get("SELECT id FROM pacientes WHERE id = ?", [id], callback);
 }
 
-function verificarDisponibilidad(fecha, hora, id, callback) {
-    const parametros = [fecha, hora];
-    let consulta = "SELECT id FROM citas WHERE fecha = ? AND hora = ? AND estado != 'Cancelada'";
+function verificarMedico(id, callback) {
+    db.get("SELECT id FROM medicos WHERE id = ?", [id], callback);
+}
+
+function verificarDisponibilidad(medicoId, fecha, hora, id, callback) {
+    const parametros = [medicoId, fecha, hora];
+    let consulta = "SELECT id FROM citas WHERE medico_id = ? AND fecha = ? AND hora = ? AND estado != 'Cancelada'";
     if (id) {
         consulta += " AND id != ?";
         parametros.push(id);
@@ -39,9 +45,12 @@ router.get("/", (req, res) => {
     const buscar = typeof req.query.buscar === "string" ? req.query.buscar.trim() : "";
     const termino = `%${buscar}%`;
     db.all(
-        `SELECT citas.id, citas.paciente_id, pacientes.nombre AS paciente,
+        `SELECT citas.id, citas.paciente_id, citas.medico_id,
+                pacientes.nombre AS paciente, medicos.nombre AS medico,
                 citas.fecha, citas.hora, citas.motivo, citas.estado
-         FROM citas INNER JOIN pacientes ON pacientes.id = citas.paciente_id
+         FROM citas
+         INNER JOIN pacientes ON pacientes.id = citas.paciente_id
+         LEFT JOIN medicos ON medicos.id = citas.medico_id
          WHERE pacientes.nombre LIKE ? OR citas.fecha LIKE ?
          ORDER BY citas.fecha, citas.hora`,
         [termino, termino],
@@ -54,16 +63,19 @@ router.get("/", (req, res) => {
 
 router.post("/", (req, res) => {
     if (!validarCita(req.body)) return res.status(400).json({ mensaje: "Verifica los datos de la cita." });
-    const { paciente_id, fecha, hora, motivo } = req.body;
+    const { paciente_id, medico_id, fecha, hora, motivo } = req.body;
     verificarPaciente(paciente_id, (error, paciente) => {
         if (error) return res.status(500).json({ mensaje: "No se pudo validar el paciente." });
         if (!paciente) return res.status(404).json({ mensaje: "El paciente no existe." });
-        verificarDisponibilidad(fecha, hora, null, (errorHorario, ocupado) => {
+        verificarMedico(medico_id, (errorMedico, medico) => {
+            if (errorMedico) return res.status(500).json({ mensaje: "No se pudo validar el médico." });
+            if (!medico) return res.status(404).json({ mensaje: "El médico no existe." });
+            verificarDisponibilidad(medico_id, fecha, hora, null, (errorHorario, ocupado) => {
             if (errorHorario) return res.status(500).json({ mensaje: "No se pudo validar el horario." });
             if (ocupado) return res.status(409).json({ mensaje: "Ya existe una cita en ese horario." });
             db.run(
-                "INSERT INTO citas (paciente_id, fecha, hora, motivo) VALUES (?, ?, ?, ?)",
-                [paciente_id, fecha, hora, motivo.trim()],
+                "INSERT INTO citas (paciente_id, medico_id, fecha, hora, motivo) VALUES (?, ?, ?, ?, ?)",
+                [paciente_id, medico_id, fecha, hora, motivo.trim()],
                 function (errorInsercion) {
                     if (errorInsercion) return res.status(500).json({ mensaje: "No se pudo registrar la cita." });
                     res.status(201).json({ id: this.lastID, mensaje: "Cita registrada correctamente." });
@@ -71,20 +83,24 @@ router.post("/", (req, res) => {
             );
         });
     });
+    });
 });
 
 router.put("/:id", (req, res) => {
     if (!validarCita(req.body)) return res.status(400).json({ mensaje: "Verifica los datos de la cita." });
-    const { paciente_id, fecha, hora, motivo, estado = "Programada" } = req.body;
+    const { paciente_id, medico_id, fecha, hora, motivo, estado = "Programada" } = req.body;
     verificarPaciente(paciente_id, (error, paciente) => {
         if (error) return res.status(500).json({ mensaje: "No se pudo validar el paciente." });
         if (!paciente) return res.status(404).json({ mensaje: "El paciente no existe." });
-        verificarDisponibilidad(fecha, hora, req.params.id, (errorHorario, ocupado) => {
+        verificarMedico(medico_id, (errorMedico, medico) => {
+            if (errorMedico) return res.status(500).json({ mensaje: "No se pudo validar el médico." });
+            if (!medico) return res.status(404).json({ mensaje: "El médico no existe." });
+            verificarDisponibilidad(medico_id, fecha, hora, req.params.id, (errorHorario, ocupado) => {
             if (errorHorario) return res.status(500).json({ mensaje: "No se pudo validar el horario." });
             if (ocupado && estado !== "Cancelada") return res.status(409).json({ mensaje: "Ya existe una cita en ese horario." });
             db.run(
-                "UPDATE citas SET paciente_id = ?, fecha = ?, hora = ?, motivo = ?, estado = ? WHERE id = ?",
-                [paciente_id, fecha, hora, motivo.trim(), estado, req.params.id],
+                "UPDATE citas SET paciente_id = ?, medico_id = ?, fecha = ?, hora = ?, motivo = ?, estado = ? WHERE id = ?",
+                [paciente_id, medico_id, fecha, hora, motivo.trim(), estado, req.params.id],
                 function (errorActualizacion) {
                     if (errorActualizacion) return res.status(500).json({ mensaje: "No se pudo actualizar la cita." });
                     if (!this.changes) return res.status(404).json({ mensaje: "Cita no encontrada." });
@@ -92,6 +108,7 @@ router.put("/:id", (req, res) => {
                 }
             );
         });
+    });
     });
 });
 

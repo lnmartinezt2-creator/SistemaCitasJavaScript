@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Citas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #243b53; }
+        header { background: #355d78; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 22px; margin: 0; }
+        .contenedor { max-width: 900px; margin: 18px auto; padding: 0 10px; }
+        .panel { background: white; padding: 12px; border-radius: 10px; box-shadow: 0 4px 12px #00000012; }
+        .controles { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-bottom: 12px; }
+        button, select { background: #355d78; color: white; padding: 8px 12px; border: 0; border-radius: 5px; cursor: pointer; font-size: 13px; }
+        select { background: white; color: #243b53; border: 1px solid #cbd5e1; }
+        .volver { margin-left: auto; background: white; color: #355d78; }
+        #periodo { min-width: 170px; text-align: center; font-size: 16px; font-weight: bold; }
+        .calendario { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1; }
+        .cabecera-dia, .celda { border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; }
+        .cabecera-dia { padding: 5px; background: #e8f0f6; text-align: center; font-weight: bold; font-size: 13px; }
+        .celda { min-height: 62px; padding: 4px; font-size: 13px; }
+        .celda.vacia { background: #f8fafc; }
+        .numero-dia { font-weight: bold; margin-bottom: 6px; }
+        .hoy .numero-dia { color: #0f766e; }
+        .cita { display: block; width: 100%; margin: 2px 0; padding: 3px; border-radius: 3px; background: #dbeafe; color: #1e3a8a; font-size: 10px; text-align: left; }
+        .cita.cancelada { background: #fee2e2; color: #991b1b; text-decoration: line-through; }
+        .lista-dia { display: grid; gap: 10px; }
+        .cita-detalle { padding: 14px; border-left: 4px solid #355d78; background: #f8fafc; border-radius: 5px; }
+        .sin-citas { color: #64748b; padding: 20px 0; }
+        @media (max-width: 700px) { header { flex-direction: column; gap: 15px; } .volver { margin-left: 0; } .celda { min-height: 90px; padding: 4px; } .cita { font-size: 10px; padding: 4px; } .cabecera-dia { font-size: 12px; padding: 7px 2px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Calendario de Citas</h1>
+        <button class="volver" id="volver" type="button">Volver al Dashboard</button>
+    </header>
+    <main class="contenedor">
+        <section class="panel">
+            <div class="controles">
+                <button id="anterior" type="button">Anterior</button>
+                <button id="hoy" type="button">Hoy</button>
+                <button id="siguiente" type="button">Siguiente</button>
+                <strong id="periodo"></strong>
+                <select id="vista" aria-label="Vista del calendario">
+                    <option value="mes">Mes</option>
+                    <option value="semana">Semana</option>
+                    <option value="dia">Día</option>
+                </select>
+            </div>
+            <div id="calendario"></div>
+        </section>
+    </main>
+    <script>
+        const calendario = document.getElementById("calendario");
+        const periodo = document.getElementById("periodo");
+        const nombresDias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+        let fechaActual = new Date();
+        let citas = [];
+        let vista = "mes";
+        const fechaISO = (fecha) => {
+            const año = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+            const dia = String(fecha.getDate()).padStart(2, "0");
+            return `${año}-${mes}-${dia}`;
+        };
+        const escapar = (valor) => String(valor ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
+        const inicioSemana = (fecha) => {
+            const resultado = new Date(fecha);
+            const dia = resultado.getDay() || 7;
+            resultado.setDate(resultado.getDate() - dia + 1);
+            return resultado;
+        };
+        const formatear = (fecha, opciones) => new Intl.DateTimeFormat("es-CO", opciones).format(fecha);
+        function citasDeFecha(fecha) {
+            return citas.filter((cita) => cita.fecha === fechaISO(fecha));
+        }
+        function renderCita(cita) {
+            const cancelada = cita.estado === "Cancelada" ? " cancelada" : "";
+            return `<div class="cita${cancelada}" title="${escapar(cita.motivo)}">${escapar(cita.hora)} - ${escapar(cita.paciente)}<br><small>${escapar(cita.estado)}</small></div>`;
+        }
+        function renderMes() {
+            const año = fechaActual.getFullYear();
+            const mes = fechaActual.getMonth();
+            const primerDia = new Date(año, mes, 1);
+            const diasMes = new Date(año, mes + 1, 0).getDate();
+            const desplazamiento = (primerDia.getDay() || 7) - 1;
+            periodo.textContent = formatear(fechaActual, { month: "long", year: "numeric" });
+            let html = '<div class="calendario">' + nombresDias.map((dia) => `<div class="cabecera-dia">${dia}</div>`).join("");
+            for (let posicion = 0; posicion < desplazamiento + diasMes; posicion++) {
+                if (posicion < desplazamiento) { html += '<div class="celda vacia"></div>'; continue; }
+                const fecha = new Date(año, mes, posicion - desplazamiento + 1);
+                const citasDia = citasDeFecha(fecha);
+                html += `<div class="celda${fechaISO(fecha) === fechaISO(new Date()) ? " hoy" : ""}"><div class="numero-dia">${fecha.getDate()}</div>${citasDia.map(renderCita).join("")}</div>`;
+            }
+            calendario.innerHTML = html + "</div>";
+        }
+        function renderSemana() {
+            const inicio = inicioSemana(fechaActual);
+            const fin = new Date(inicio); fin.setDate(fin.getDate() + 6);
+            periodo.textContent = `${formatear(inicio, { day: "numeric", month: "short" })} - ${formatear(fin, { day: "numeric", month: "short", year: "numeric" })}`;
+            calendario.innerHTML = '<div class="calendario">' + nombresDias.map((dia) => `<div class="cabecera-dia">${dia}</div>`).join("") +
+                nombresDias.map((_, indice) => { const fecha = new Date(inicio); fecha.setDate(fecha.getDate() + indice); return `<div class="celda${fechaISO(fecha) === fechaISO(new Date()) ? " hoy" : ""}"><div class="numero-dia">${fecha.getDate()} ${formatear(fecha, { month: "short" })}</div>${citasDeFecha(fecha).map(renderCita).join("")}</div>`; }).join("") + "</div>";
+        }
+        function renderDia() {
+            periodo.textContent = formatear(fechaActual, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+            const citasDia = citasDeFecha(fechaActual);
+            calendario.innerHTML = citasDia.length ? `<div class="lista-dia">${citasDia.map((cita) => `<div class="cita-detalle"><strong>${escapar(cita.hora)} - ${escapar(cita.paciente)}</strong><br>${escapar(cita.motivo)}<br><small>Estado: ${escapar(cita.estado)}</small></div>`).join("")}</div>` : '<p class="sin-citas">No hay citas para este día.</p>';
+        }
+        function render() { if (vista === "mes") renderMes(); else if (vista === "semana") renderSemana(); else renderDia(); }
+        async function cargarCitas() {
+            const respuesta = await fetch("/api/citas?buscar=");
+            if (!respuesta.ok) throw new Error("No se pudieron cargar las citas.");
+            citas = await respuesta.json();
+            render();
+        }
+        function mover(direccion) {
+            if (vista === "mes") fechaActual.setMonth(fechaActual.getMonth() + direccion);
+            else if (vista === "semana") fechaActual.setDate(fechaActual.getDate() + direccion * 7);
+            else fechaActual.setDate(fechaActual.getDate() + direccion);
+            render();
+        }
+        document.getElementById("anterior").addEventListener("click", () => mover(-1));
+        document.getElementById("siguiente").addEventListener("click", () => mover(1));
+        document.getElementById("hoy").addEventListener("click", () => { fechaActual = new Date(); render(); });
+        document.getElementById("vista").addEventListener("change", (evento) => { vista = evento.target.value; render(); });
+        document.getElementById("volver").addEventListener("click", () => { window.location.href = "/dashboarrd.html"; });
+        cargarCitas().catch((error) => { calendario.innerHTML = `<p class="sin-citas">${escapar(error.message)}</p>`; });
+    </script>
+</body>
+</html>

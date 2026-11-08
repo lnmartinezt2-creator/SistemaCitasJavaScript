@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Médicos</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #243b53; }
+        header { background: #355d78; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 22px; margin: 0; }
+        .contenedor { max-width: 1150px; margin: 35px auto; padding: 0 20px; }
+        .panel { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px #00000012; }
+        .formulario, .busqueda { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .campo { display: flex; flex-direction: column; gap: 7px; }
+        input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; }
+        button { background: #355d78; color: white; padding: 12px 20px; border: 0; border-radius: 6px; cursor: pointer; }
+        .volver { background: white; color: #355d78; }
+        .acciones { margin-top: 20px; display: flex; gap: 10px; }
+        .tabla { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #e8f0f6; }
+        td button { margin: 3px; padding: 8px 12px; }
+        #mensaje { margin-top: 15px; }
+        @media (max-width: 650px) { .formulario, .busqueda { grid-template-columns: 1fr; } header { flex-direction: column; gap: 15px; } }
+    </style>
+</head>
+<body>
+    <header><h1>Gestión de Médicos</h1><button class="volver" id="volver" type="button">Volver al Dashboard</button></header>
+    <main class="contenedor">
+        <section class="panel">
+            <h2 id="titulo">Registrar médico</h2>
+            <form id="formulario" class="formulario">
+                <input type="hidden" id="medicoId">
+                <div class="campo"><label for="nombre">Nombre completo</label><input id="nombre" required></div>
+                <div class="campo"><label for="especialidad">Especialidad</label><input id="especialidad" required></div>
+                <div class="campo"><label for="documento">Documento</label><input id="documento" required></div>
+                <div class="campo"><label for="telefono">Teléfono</label><input id="telefono"></div>
+                <div class="campo"><label for="correo">Correo electrónico</label><input id="correo" type="email"></div>
+                <div class="acciones"><button type="submit">Guardar médico</button><button type="button" id="cancelar" hidden>Cancelar</button></div>
+            </form>
+            <p id="mensaje" role="status"></p>
+        </section>
+        <section class="panel">
+            <h2>Médicos registrados</h2>
+            <div class="busqueda"><input id="buscar" placeholder="Buscar por nombre, especialidad o documento"><button id="buscarBtn" type="button">Buscar</button></div>
+            <div class="tabla"><table><thead><tr><th>Nombre</th><th>Especialidad</th><th>Documento</th><th>Teléfono</th><th>Correo</th><th>Acciones</th></tr></thead><tbody id="lista"></tbody></table></div>
+        </section>
+    </main>
+    <script>
+        const formulario = document.getElementById("formulario");
+        const lista = document.getElementById("lista");
+        const mensaje = document.getElementById("mensaje");
+        const campos = ["nombre", "especialidad", "documento", "telefono", "correo"];
+        let medicos = [];
+        const escapar = (valor) => String(valor ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
+        const mostrar = (texto, error = false) => { mensaje.textContent = texto; mensaje.style.color = error ? "#b91c1c" : "#166534"; };
+        async function cargar() {
+            const buscar = encodeURIComponent(document.getElementById("buscar").value.trim());
+            const respuesta = await fetch(`/api/medicos?buscar=${buscar}`);
+            if (!respuesta.ok) throw new Error("No se pudieron cargar los médicos.");
+            medicos = await respuesta.json();
+            lista.innerHTML = medicos.length ? medicos.map((m) => `<tr><td>${escapar(m.nombre)}</td><td>${escapar(m.especialidad)}</td><td>${escapar(m.documento)}</td><td>${escapar(m.telefono || "-")}</td><td>${escapar(m.correo || "-")}</td><td><button type="button" data-editar="${m.id}">Editar</button><button type="button" data-eliminar="${m.id}">Eliminar</button></td></tr>`).join("") : '<tr><td colspan="6">No hay médicos registrados.</td></tr>';
+        }
+        function limpiar() { formulario.reset(); document.getElementById("medicoId").value = ""; document.getElementById("titulo").textContent = "Registrar médico"; document.getElementById("cancelar").hidden = true; }
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const id = document.getElementById("medicoId").value;
+            const datos = Object.fromEntries(campos.map((campo) => [campo, document.getElementById(campo).value]));
+            const respuesta = await fetch(id ? `/api/medicos/${id}` : "/api/medicos", { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+            const resultado = await respuesta.json(); mostrar(resultado.mensaje, !respuesta.ok);
+            if (respuesta.ok) { limpiar(); await cargar(); }
+        });
+        lista.addEventListener("click", async (evento) => {
+            if (evento.target.dataset.editar) {
+                const medico = medicos.find((item) => item.id === Number(evento.target.dataset.editar));
+                document.getElementById("medicoId").value = medico.id;
+                campos.forEach((campo) => { document.getElementById(campo).value = medico[campo] || ""; });
+                document.getElementById("titulo").textContent = "Editar médico"; document.getElementById("cancelar").hidden = false; window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+            if (evento.target.dataset.eliminar && confirm("¿Deseas eliminar este médico?")) {
+                const respuesta = await fetch(`/api/medicos/${evento.target.dataset.eliminar}`, { method: "DELETE" });
+                const resultado = await respuesta.json(); mostrar(resultado.mensaje, !respuesta.ok); if (respuesta.ok) await cargar();
+            }
+        });
+        document.getElementById("cancelar").addEventListener("click", limpiar);
+        document.getElementById("buscarBtn").addEventListener("click", cargar);
+        document.getElementById("buscar").addEventListener("input", cargar);
+        document.getElementById("volver").addEventListener("click", () => { window.location.href = "/dashboarrd.html"; });
+        cargar().catch((error) => mostrar(error.message, true));
+    </script>
+</body>
+</html>

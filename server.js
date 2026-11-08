@@ -12,6 +12,7 @@ require("./backend/database");
 // Importar los módulos.
 const pacientesRoutes = require("./backend/pacientes");
 const citasRoutes = require("./backend/citas");
+const medicosRoutes = require("./backend/medicos");
 const usuariosRoutes = require("./backend/usuarios");
 
 const app = express();
@@ -59,6 +60,7 @@ app.use(express.static(path.join(__dirname, "public"), {
 // Rutas de la aplicación.
 app.use("/api/pacientes", pacientesRoutes);
 app.use("/api/citas", citasRoutes);
+app.use("/api/medicos", medicosRoutes);
 app.use("/api/usuarios", usuariosRoutes);
 
 // Comprobar funcionamiento del servidor.

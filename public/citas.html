@@ -26,6 +26,35 @@
         td button { margin: 3px; padding: 8px 12px; }
         .cancelada { color: #b91c1c; font-weight: bold; }
         #mensaje { margin-top: 15px; }
+        .pasos { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; color: #64748b; }
+        .paso { padding: 8px 18px; border-radius: 20px; background: #e2e8f0; }
+        .paso.activo { background: #355d78; color: white; }
+        .leyenda { display: flex; gap: 18px; margin: 20px 0 10px; font-size: 13px; }
+        .leyenda span::before { display: inline-block; width: 14px; height: 14px; margin-right: 5px; border-radius: 3px; content: ""; vertical-align: -2px; }
+        .disponible::before { background: #bfdbfe; }
+        .seleccionado::before { background: #2563eb; }
+        .horarios { display: flex; flex-wrap: wrap; gap: 8px; }
+        .horario { padding: 9px 14px; background: #bfdbfe; color: #1e3a8a; }
+        .horario.seleccionado { background: #2563eb; color: white; }
+        .horario.ocupado { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; text-decoration: line-through; }
+        .aceptacion { display: flex; align-items: flex-start; gap: 8px; margin-top: 20px; font-size: 13px; }
+        .aceptacion input { margin-top: 2px; }
+        .ancho-completo { grid-column: 1 / -1; }
+        .seccion-centro { grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        .aviso { padding: 12px; margin: 12px 0; background: #e0f2fe; color: #355d78; font-size: 13px; }
+        .jornada { display: flex; justify-content: center; gap: 70px; margin: 14px 0; }
+        .jornada label { display: flex; align-items: center; gap: 6px; }
+        .jornada input { accent-color: #355d78; }
+        .mini-calendario { max-width: 290px; margin: 10px auto; }
+        .mini-controles { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f1f5f9; }
+        .mini-controles button { padding: 3px 8px; background: transparent; color: #355d78; font-size: 18px; }
+        .mini-titulo { font-size: 13px; font-weight: bold; text-transform: capitalize; }
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+        .mini-grid span { padding: 5px 2px; font-size: 11px; }
+        .mini-grid .nombre-dia { color: #64748b; font-weight: bold; }
+        .mini-grid .dia { cursor: pointer; border-radius: 3px; }
+        .mini-grid .dia:hover, .mini-grid .dia.seleccionado { background: #1683ed; color: white; }
+        .mini-grid .dia.vacio { cursor: default; }
         @media (max-width: 650px) { .formulario, .barra-busqueda { grid-template-columns: 1fr; } header { flex-direction: column; gap: 15px; } }
     </style>
 </head>
@@ -36,14 +65,66 @@
     </header>
     <main class="contenedor">
         <section class="panel">
-            <h2 id="tituloFormulario">Registrar cita</h2>
+            <div class="pasos"><span class="paso activo">1. Elegir fecha y hora</span><span class="paso">2. Confirmar cita</span></div>
+            <h2 id="tituloFormulario">Agendar cita</h2>
             <form id="formCita" class="formulario">
                 <input type="hidden" id="citaId">
                 <div class="campo"><label for="paciente_id">Paciente</label><select id="paciente_id" required></select></div>
-                <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha" required></div>
-                <div class="campo"><label for="hora">Hora</label><input type="time" id="hora" required></div>
-                <div class="campo"><label for="estado">Estado</label><select id="estado"><option>Programada</option><option>Completada</option><option>Cancelada</option></select></div>
-                <div class="campo" style="grid-column: 1 / -1"><label for="motivo">Motivo de la consulta</label><textarea id="motivo" rows="3" required></textarea></div>
+                <div class="campo"><label for="centro">Ciudad del centro médico</label><select id="centro" required>
+                    <option value="">Selecciona una ciudad</option>
+                    <option>Bogotá</option>
+                    <option>Medellín</option>
+                    <option>Cali</option>
+                    <option>Barranquilla</option>
+                    <option>Cartagena</option>
+                    <option>Santa Marta</option>
+                    <option>Valledupar</option>
+                    <option>Sincelejo</option>
+                    <option>Montería</option>
+                    <option>Riohacha</option>
+                    <option>San Andrés</option>
+                    <option>Armenia</option>
+                    <option>Pereira</option>
+                    <option>Manizales</option>
+                    <option>Quibdó</option>
+                    <option>Ibagué</option>
+                    <option>Neiva</option>
+                    <option>Villavicencio</option>
+                    <option>Yopal</option>
+                    <option>Florencia</option>
+                    <option>Popayán</option>
+                    <option>Pasto</option>
+                    <option>Tunja</option>
+                    <option>Funza</option>
+                    <option>Girardot</option>
+                    <option>Bucaramanga</option>
+                    <option>Cúcuta</option>
+                    <option>Leticia</option>
+                    <option>Puerto Carreño</option>
+                    <option>Mitú</option>
+                    <option>Inírida</option>
+                    <option>Mocoa</option>
+                </select></div>
+                <div class="seccion-centro">
+                    <h3>Centro médico, día, hora y profesional de la salud</h3>
+                    <div class="aviso">Los centros médicos están ordenados por la fecha más cercana para agendar.</div>
+                    <div class="campo"><label for="medico_id">Elige el profesional de la salud</label><select id="medico_id" required></select></div>
+                    <div class="jornada">
+                        <label><input type="radio" name="jornada" value="AM" checked> AM</label>
+                        <label><input type="radio" name="jornada" value="PM"> PM</label>
+                    </div>
+                    <div class="mini-calendario">
+                        <div class="mini-controles"><button type="button" id="mesAnterior">&lsaquo;</button><span class="mini-titulo" id="mesTitulo"></span><button type="button" id="mesSiguiente">&rsaquo;</button></div>
+                        <div id="miniCalendario" class="mini-grid"></div>
+                    </div>
+                    <div class="leyenda"><span class="disponible">Agenda disponible</span><span class="seleccionado">Día seleccionado</span></div>
+                </div>
+                <input type="hidden" id="fecha" required>
+                <input type="hidden" id="hora" required>
+                <input type="hidden" id="estado" value="Programada">
+                <div class="campo ancho-completo"><label>Hora de atención</label><div id="horarios" class="horarios"></div></div>
+                <div class="campo ancho-completo"><label for="motivo">Motivo de la consulta</label><textarea id="motivo" rows="2" required></textarea></div>
+                <label class="aceptacion ancho-completo"><input type="checkbox" id="privacidad" required> He leído y acepto la política de tratamiento de datos personales y aviso de privacidad.</label>
                 <div class="acciones"><button type="submit">Guardar cita</button><button type="button" id="cancelarEdicion" hidden>Cancelar</button></div>
             </form>
             <p id="mensaje" role="status"></p>
@@ -58,8 +139,9 @@
         const formulario = document.getElementById("formCita");
         const lista = document.getElementById("listaCitas");
         const mensaje = document.getElementById("mensaje");
-        const campos = ["paciente_id", "fecha", "hora", "estado", "motivo"];
+        const campos = ["paciente_id", "medico_id", "fecha", "hora", "estado", "motivo"];
         let citas = [];
+        let mesCalendario = new Date();
         const escapar = (valor) => String(valor ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
         const mostrarMensaje = (texto, error = false) => { mensaje.textContent = texto; mensaje.style.color = error ? "#b91c1c" : "#166534"; };
         async function cargarPacientes() {
@@ -68,22 +150,71 @@
             const pacientes = await respuesta.json();
             document.getElementById("paciente_id").innerHTML = pacientes.length ? pacientes.map((p) => `<option value="${p.id}">${escapar(p.nombre)} - ${escapar(p.documento)}</option>`).join("") : '<option value="">Registra primero un paciente</option>';
         }
+        async function cargarMedicos() {
+            const respuesta = await fetch("/api/medicos?buscar=");
+            if (!respuesta.ok) throw new Error("No se pudieron cargar los médicos.");
+            const medicos = await respuesta.json();
+            document.getElementById("medico_id").innerHTML = medicos.length ? medicos.map((m) => `<option value="${m.id}">${escapar(m.nombre)} - ${escapar(m.especialidad)}</option>`).join("") : '<option value="">Registra primero un médico</option>';
+            renderizarHorarios();
+        }
+        function renderizarHorarios() {
+            const jornada = document.querySelector("input[name='jornada']:checked").value;
+            const horas = jornada === "AM" ? ["08:00", "09:00", "10:00", "11:00"] : ["14:00", "15:00", "16:00", "17:00"];
+            const fecha = document.getElementById("fecha").value;
+            const medico = document.getElementById("medico_id").value;
+            const ocupadas = citas.filter((cita) => cita.fecha === fecha && String(cita.medico_id) === String(medico) && cita.estado !== "Cancelada").map((cita) => cita.hora);
+            document.getElementById("horarios").innerHTML = horas.map((hora) => `<button type="button" class="horario${ocupadas.includes(hora) ? " ocupado" : ""}${document.getElementById("hora").value === hora ? " seleccionado" : ""}" data-hora="${hora}" ${ocupadas.includes(hora) ? "disabled" : ""}>${hora}</button>`).join("");
+        }
+        function renderizarMiniCalendario() {
+            const año = mesCalendario.getFullYear();
+            const mes = mesCalendario.getMonth();
+            const primerDia = new Date(año, mes, 1);
+            const diasMes = new Date(año, mes + 1, 0).getDate();
+            const desplazamiento = primerDia.getDay();
+            document.getElementById("mesTitulo").textContent = mesCalendario.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
+            let html = ["LU", "MA", "MI", "JU", "VI", "SA", "DO"].map((dia) => `<span class="nombre-dia">${dia}</span>`).join("");
+            for (let i = 1; i < (desplazamiento || 7); i++) html += '<span class="dia vacio"></span>';
+            for (let dia = 1; dia <= diasMes; dia++) {
+                const fecha = new Date(año, mes, dia);
+                const valor = `${año}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+                const seleccionado = document.getElementById("fecha").value === valor ? " seleccionado" : "";
+                html += `<span class="dia${seleccionado}" data-fecha="${valor}">${dia}</span>`;
+            }
+            document.getElementById("miniCalendario").innerHTML = html;
+        }
         async function cargarCitas() {
             const buscar = encodeURIComponent(document.getElementById("buscar").value.trim());
             const respuesta = await fetch(`/api/citas?buscar=${buscar}`);
             if (!respuesta.ok) throw new Error("No se pudieron cargar las citas.");
             citas = await respuesta.json();
             lista.innerHTML = citas.length ? citas.map((c) => `<tr><td>${escapar(c.paciente)}</td><td>${escapar(c.fecha)}</td><td>${escapar(c.hora)}</td><td>${escapar(c.motivo)}</td><td class="${c.estado === "Cancelada" ? "cancelada" : ""}">${escapar(c.estado)}</td><td><button type="button" data-editar="${c.id}">Editar</button>${c.estado !== "Cancelada" ? `<button type="button" data-cancelar="${c.id}">Cancelar</button>` : ""}</td></tr>`).join("") : '<tr><td colspan="6">No hay citas registradas.</td></tr>';
+            renderizarHorarios();
         }
         function limpiarFormulario() { formulario.reset(); document.getElementById("citaId").value = ""; document.getElementById("tituloFormulario").textContent = "Registrar cita"; document.getElementById("cancelarEdicion").hidden = true; }
         formulario.addEventListener("submit", async (evento) => {
             evento.preventDefault();
+            if (!document.getElementById("hora").value) { mostrarMensaje("Selecciona una hora disponible.", true); return; }
             const id = document.getElementById("citaId").value;
             const datos = Object.fromEntries(campos.map((campo) => [campo, document.getElementById(campo).value]));
             const respuesta = await fetch(id ? `/api/citas/${id}` : "/api/citas", { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
             const resultado = await respuesta.json(); mostrarMensaje(resultado.mensaje, !respuesta.ok);
             if (respuesta.ok) { limpiarFormulario(); await cargarCitas(); }
         });
+        document.getElementById("horarios").addEventListener("click", (evento) => {
+            if (evento.target.dataset.hora) { document.getElementById("hora").value = evento.target.dataset.hora; renderizarHorarios(); }
+        });
+        document.getElementById("miniCalendario").addEventListener("click", (evento) => {
+            if (evento.target.dataset.fecha) {
+                document.getElementById("fecha").value = evento.target.dataset.fecha;
+                document.getElementById("hora").value = "";
+                renderizarMiniCalendario();
+                renderizarHorarios();
+            }
+        });
+        document.getElementById("mesAnterior").addEventListener("click", () => { mesCalendario.setMonth(mesCalendario.getMonth() - 1); renderizarMiniCalendario(); });
+        document.getElementById("mesSiguiente").addEventListener("click", () => { mesCalendario.setMonth(mesCalendario.getMonth() + 1); renderizarMiniCalendario(); });
+        document.querySelectorAll("input[name='jornada']").forEach((radio) => radio.addEventListener("change", renderizarHorarios));
+        document.getElementById("medico_id").addEventListener("change", renderizarHorarios);
         lista.addEventListener("click", async (evento) => {
             const editar = evento.target.dataset.editar;
             const cancelar = evento.target.dataset.cancelar;
@@ -100,7 +231,8 @@
         document.getElementById("buscarBtn").addEventListener("click", cargarCitas);
         document.getElementById("buscar").addEventListener("input", cargarCitas);
         document.getElementById("volver").addEventListener("click", () => { window.location.href = "/dashboarrd.html"; });
-        Promise.all([cargarPacientes(), cargarCitas()]).catch((error) => mostrarMensaje(error.message, true));
+        renderizarMiniCalendario();
+        Promise.all([cargarPacientes(), cargarMedicos(), cargarCitas()]).catch((error) => mostrarMensaje(error.message, true));
     </script>
 </body>
 </html>
