@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Principal - Sistema de Citas</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #243b53;
+        }
+
+        header {
+            background: #355d78;
+            color: white;
+            padding: 20px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .contenedor {
+            padding: 40px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .bienvenida {
+            margin-bottom: 30px;
+        }
+
+        .tarjetas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 20px;
+        }
+
+        .tarjeta {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px #00000012;
+        }
+
+        .tarjeta h3 {
+            color: #355d78;
+        }
+
+        .tarjeta button {
+            background: #355d78;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .salir {
+            background: white;
+            color: #355d78;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Sistema de Gestión de Citas</h1>
+        <button class="salir" id="cerrarSesion">
+            Cerrar sesión
+        </button>
+    </header>
+
+    <main class="contenedor">
+
+        <div class="bienvenida">
+            <h2>Bienvenido al sistema</h2>
+            <p>Selecciona una opción para comenzar.</p>
+        </div>
+
+        <div class="tarjetas">
+
+            <div class="tarjeta">
+                <h3>Pacientes</h3>
+                <p>Registrar y consultar pacientes.</p>
+                <button type="button" id="ingresarPacientes">
+                    Ingresar
+                </button>
+            </div>
+
+            <div class="tarjeta">
+                <h3>Gestión de citas</h3>
+                <p>Programar y consultar citas médicas.</p>
+                <button type="button" id="ingresarCitas">
+                    Ingresar
+                </button>
+            </div>
+
+            <div class="tarjeta">
+                <h3>Historial</h3>
+                <p>Consultar el historial de citas.</p>
+                <button type="button" disabled>
+                    Próximamente
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        document.getElementById("cerrarSesion").addEventListener("click", () => {
+            window.location.href = "/";
+        });
+        document.getElementById("ingresarPacientes").addEventListener("click", () => {
+            window.location.href = "/pacientes.html";
+        });
+        document.getElementById("ingresarCitas").addEventListener("click", () => {
+            window.location.href = "/citas.html";
+        });
+    </script>
+</body>
+</html>

@@ -218,18 +218,23 @@ input::placeholder {
 }
 
 .password-field input {
-    padding-right: 76px;
+    padding-right: 48px;
+}
+
+.password-field input::-ms-reveal,
+.password-field input::-ms-clear {
+    display: none;
 }
 
 .password-toggle {
-    width: 22px;
-    height: 22px;
     position: absolute;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    right: 7px;
     top: 50%;
-    right: 12px;
     padding: 0;
     border: 0;
-    color: #9aa5ad;
     background: transparent;
     cursor: pointer;
     transform: translateY(-50%);
@@ -237,33 +242,31 @@ input::placeholder {
 
 .password-toggle::before {
     position: absolute;
-    width: 13px;
-    height: 10px;
-    right: 4px;
-    bottom: 3px;
-    border: 1.5px solid currentColor;
+    width: 10px;
+    height: 8px;
+    right: 10px;
+    top: 50%;
+    border: 1.5px solid #9aa5ad;
     border-radius: 2px;
-    content: '';
+    content: "";
+    transform: translateY(-25%);
 }
 
 .password-toggle::after {
     position: absolute;
-    width: 8px;
-    height: 8px;
-    top: 2px;
-    right: 6.5px;
-    border: 1.5px solid currentColor;
+    width: 7px;
+    height: 7px;
+    right: 11.5px;
+    top: calc(50% - 8px);
+    border: 1.5px solid #9aa5ad;
     border-bottom: 0;
-    border-radius: 8px 8px 0 0;
-    content: '';
+    border-radius: 7px 7px 0 0;
+    content: "";
 }
 
-.password-toggle.is-visible::after {
-    transform: translateY(2px);
-}
-
-.password-toggle:hover {
-    color: #c1c8cc;
+.password-toggle:hover::before,
+.password-toggle:hover::after {
+    border-color: #c1c8cc;
 }
 
 .form-options {

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Pacientes</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #243b53; }
+        header { background: #355d78; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 22px; margin: 0; }
+        .contenedor { max-width: 1100px; margin: 35px auto; padding: 0 20px; }
+        .panel { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px #00000012; }
+        .formulario, .barra-busqueda { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .campo { display: flex; flex-direction: column; gap: 7px; }
+        input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; }
+        button { background: #355d78; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #27465c; }
+        .volver { background: white; color: #355d78; }
+        .acciones { margin-top: 20px; }
+        .tabla-contenedor { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #e8f0f6; }
+        td button { margin: 3px; padding: 8px 12px; }
+        #mensaje { margin-top: 15px; }
+        @media (max-width: 650px) { .formulario, .barra-busqueda { grid-template-columns: 1fr; } header { flex-direction: column; gap: 15px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestión de Pacientes</h1>
+        <button class="volver" id="volver" type="button">Volver al Dashboard</button>
+    </header>
+    <main class="contenedor">
+        <section class="panel">
+            <h2 id="tituloFormulario">Registrar paciente</h2>
+            <form id="formPaciente" class="formulario">
+                <input type="hidden" id="pacienteId">
+                <div class="campo"><label for="nombre">Nombre completo</label><input id="nombre" required></div>
+                <div class="campo"><label for="documento">Documento</label><input id="documento" required></div>
+                <div class="campo"><label for="edad">Edad</label><input type="number" id="edad" min="0" max="120" required></div>
+                <div class="campo"><label for="telefono">Teléfono</label><input type="tel" id="telefono"></div>
+                <div class="campo"><label for="correo">Correo electrónico</label><input type="email" id="correo"></div>
+                <div class="acciones"><button type="submit">Guardar paciente</button><button type="button" id="cancelarEdicion" hidden>Cancelar</button></div>
+            </form>
+            <p id="mensaje" role="status"></p>
+        </section>
+        <section class="panel">
+            <h2>Pacientes registrados</h2>
+            <div class="barra-busqueda"><input id="buscar" placeholder="Buscar por nombre o documento"><button id="buscarBtn" type="button">Buscar</button></div>
+            <div class="tabla-contenedor"><table><thead><tr><th>Nombre</th><th>Documento</th><th>Edad</th><th>Teléfono</th><th>Correo</th><th>Acciones</th></tr></thead><tbody id="listaPacientes"></tbody></table></div>
+        </section>
+    </main>
+    <script>
+        const formulario = document.getElementById("formPaciente");
+        const lista = document.getElementById("listaPacientes");
+        const mensaje = document.getElementById("mensaje");
+        const campos = ["nombre", "documento", "edad", "telefono", "correo"];
+        let pacientes = [];
+
+        function mostrarMensaje(texto, error = false) {
+            mensaje.textContent = texto;
+            mensaje.style.color = error ? "#b91c1c" : "#166534";
+        }
+
+        async function cargarPacientes() {
+            const buscar = encodeURIComponent(document.getElementById("buscar").value.trim());
+            const respuesta = await fetch(`/api/pacientes?buscar=${buscar}`);
+            if (!respuesta.ok) throw new Error("No se pudieron cargar los pacientes.");
+            pacientes = await respuesta.json();
+            lista.innerHTML = pacientes.length ? pacientes.map((paciente) => `
+                <tr><td>${paciente.nombre}</td><td>${paciente.documento}</td><td>${paciente.edad}</td>
+                <td>${paciente.telefono || "-"}</td><td>${paciente.correo || "-"}</td>
+                <td><button type="button" data-detalle="${paciente.id}">Detalle</button><button type="button" data-editar="${paciente.id}">Editar</button><button type="button" data-eliminar="${paciente.id}">Eliminar</button></td></tr>`).join("") :
+                '<tr><td colspan="6">No hay pacientes registrados.</td></tr>';
+        }
+
+        function limpiarFormulario() {
+            formulario.reset();
+            document.getElementById("pacienteId").value = "";
+            document.getElementById("tituloFormulario").textContent = "Registrar paciente";
+            document.getElementById("cancelarEdicion").hidden = true;
+        }
+
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const id = document.getElementById("pacienteId").value;
+            const datos = Object.fromEntries(campos.map((campo) => [campo, campo === "edad" ? Number(document.getElementById(campo).value) : document.getElementById(campo).value]));
+            const respuesta = await fetch(id ? `/api/pacientes/${id}` : "/api/pacientes", { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+            const resultado = await respuesta.json();
+            mostrarMensaje(resultado.mensaje, !respuesta.ok);
+            if (respuesta.ok) { limpiarFormulario(); await cargarPacientes(); }
+        });
+
+        lista.addEventListener("click", async (evento) => {
+            const editar = evento.target.dataset.editar;
+            const eliminar = evento.target.dataset.eliminar;
+            const detalle = evento.target.dataset.detalle;
+            if (detalle) {
+                const paciente = pacientes.find((item) => item.id === Number(detalle));
+                alert(`Nombre: ${paciente.nombre}\nDocumento: ${paciente.documento}\nEdad: ${paciente.edad}\nTeléfono: ${paciente.telefono || "-"}\nCorreo: ${paciente.correo || "-"}`);
+            }
+            if (editar) {
+                const paciente = pacientes.find((item) => item.id === Number(editar));
+                document.getElementById("pacienteId").value = paciente.id;
+                campos.forEach((campo) => { document.getElementById(campo).value = paciente[campo] || ""; });
+                document.getElementById("tituloFormulario").textContent = "Editar paciente";
+                document.getElementById("cancelarEdicion").hidden = false;
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+            if (eliminar && confirm("¿Deseas eliminar este paciente?")) {
+                const respuesta = await fetch(`/api/pacientes/${eliminar}`, { method: "DELETE" });
+                const resultado = await respuesta.json();
+                mostrarMensaje(resultado.mensaje, !respuesta.ok);
+                if (respuesta.ok) await cargarPacientes();
+            }
+        });
+
+        document.getElementById("cancelarEdicion").addEventListener("click", limpiarFormulario);
+        document.getElementById("buscarBtn").addEventListener("click", cargarPacientes);
+        document.getElementById("buscar").addEventListener("input", cargarPacientes);
+        document.getElementById("volver").addEventListener("click", () => { window.location.href = "/dashboarrd.html"; });
+        cargarPacientes().catch((error) => mostrarMensaje(error.message, true));
+    </script>
+</body>
+</html>

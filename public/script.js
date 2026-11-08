@@ -1,72 +1,158 @@
-const views = {
-    login: {
-        form: document.getElementById('loginForm'),
-        title: 'Iniciar sesión',
-        description: 'Ingresa tus datos para continuar.'
-    },
-    register: {
-        form: document.getElementById('registerForm'),
-        title: 'Crear una cuenta',
-        description: 'Regístrate para comenzar a gestionar tus citas.'
-    },
-    recovery: {
-        form: document.getElementById('recoveryForm'),
-        title: 'Recuperar contraseña',
-        description: 'Recupera el acceso a tu cuenta.'
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const recoveryForm = document.getElementById("recoveryForm");
+
+    const formTitle = document.getElementById("formTitle");
+    const formDescription = document.getElementById("formDescription");
+    const mensaje = document.getElementById("mensaje");
+
+    // Mostrar mensajes.
+    function mostrarMensaje(texto, error = false) {
+        mensaje.textContent = texto;
+        mensaje.classList.toggle("error", error);
     }
-};
 
-const formTitle = document.getElementById('formTitle');
-const formDescription = document.getElementById('formDescription');
-const message = document.getElementById('mensaje');
+    // Cambiar entre formularios.
+    function mostrarFormulario(vista) {
+        loginForm.classList.toggle("is-hidden", vista !== "login");
+        registerForm.classList.toggle("is-hidden", vista !== "register");
+        recoveryForm.classList.toggle("is-hidden", vista !== "recovery");
 
-function showView(viewName) {
-    const view = views[viewName];
+        const titulos = {
+            login: "Iniciar sesión",
+            register: "Crear cuenta",
+            recovery: "Recuperar contraseña"
+        };
 
-    Object.values(views).forEach(({ form }) => form.classList.add('is-hidden'));
-    view.form.classList.remove('is-hidden');
-    formTitle.textContent = view.title;
-    formDescription.textContent = view.description;
-    message.textContent = '';
-    message.classList.remove('error');
-    view.form.querySelector('input').focus();
-}
+        const descripciones = {
+            login: "Ingresa tus datos para continuar.",
+            register: "Completa tus datos para registrarte.",
+            recovery: "Ingresa tu correo electrónico."
+        };
 
-document.querySelectorAll('[data-view]').forEach((button) => {
-    button.addEventListener('click', () => showView(button.dataset.view));
-});
+        formTitle.textContent = titulos[vista];
+        formDescription.textContent = descripciones[vista];
+        mostrarMensaje("");
+    }
 
-document.querySelectorAll('.password-toggle').forEach((button) => {
-    button.addEventListener('click', () => {
-        const passwordInput = document.getElementById(button.getAttribute('aria-controls'));
-        const isVisible = passwordInput.type === 'text';
-
-        passwordInput.type = isVisible ? 'password' : 'text';
-        button.classList.toggle('is-visible', !isVisible);
-        button.setAttribute('aria-label', isVisible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    // Botones de navegación.
+    document.querySelectorAll("[data-view]").forEach(boton => {
+        boton.addEventListener("click", () => {
+            mostrarFormulario(boton.dataset.view);
+        });
     });
-});
 
-views.login.form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    message.textContent = 'Formulario listo para conectarse con el servicio de autenticación.';
-});
+    document.querySelectorAll("[data-toggle-password]").forEach(boton => {
+        boton.addEventListener("click", () => {
+            const campo = document.getElementById(boton.dataset.togglePassword);
+            const visible = campo.type === "password";
 
-views.register.form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const password = document.getElementById('registroContrasena').value;
-    const confirmation = document.getElementById('confirmarContrasena').value;
+            campo.type = visible ? "text" : "password";
+            boton.setAttribute("aria-label", visible ? "Ocultar contraseña" : "Mostrar contraseña");
+            boton.setAttribute("aria-pressed", String(visible));
+        });
+    });
 
-    if (password !== confirmation) {
-        message.textContent = 'Las contraseñas no coinciden.';
-        message.classList.add('error');
-        return;
-    }
+    // REGISTRO DE USUARIOS.
+    registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-    message.textContent = 'Cuenta lista para registrarse en el sistema.';
-});
+        const nombre = document.getElementById("nombre").value.trim();
+        const correo = document.getElementById("registroCorreo").value.trim();
+        const contrasena = document.getElementById("registroContrasena").value;
+        const confirmar = document.getElementById("confirmarContrasena").value;
 
-views.recovery.form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    message.textContent = 'Si el correo está registrado, recibirás instrucciones para recuperar tu contraseña.';
+        if (contrasena !== confirmar) {
+            mostrarMensaje("Las contraseñas no coinciden.", true);
+            return;
+        }
+
+        if (contrasena.length < 8) {
+            mostrarMensaje("La contraseña debe tener mínimo 8 caracteres.", true);
+            return;
+        }
+
+        try {
+            const respuesta = await fetch("/api/usuarios/registro", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    nombre,
+                    correo,
+                    contrasena
+                })
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                mostrarMensaje(
+                    datos.mensaje || "No se pudo registrar el usuario.",
+                    true
+                );
+                return;
+            }
+
+            registerForm.reset();
+            mostrarFormulario("login");
+            mostrarMensaje("Cuenta creada correctamente. Inicia sesión.");
+
+        } catch (error) {
+            mostrarMensaje("Error de conexión con el servidor.", true);
+        }
+    });
+
+    // INICIO DE SESIÓN.
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const correo = document.getElementById("usuario").value.trim();
+        const contrasena = document.getElementById("contrasena").value;
+
+        try {
+            const respuesta = await fetch("/api/usuarios/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    correo,
+                    contrasena
+                })
+            });
+
+            const datos = await respuesta.json();
+
+            if (!respuesta.ok) {
+                mostrarMensaje(
+                    datos.mensaje || "Correo o contraseña incorrectos.",
+                    true
+                );
+                return;
+            }
+
+            mostrarMensaje("Credenciales correctas.");
+            window.location.href = "/dashboarrd.html";
+
+        } catch (error) {
+            mostrarMensaje("Error de conexión con el servidor.", true);
+        }
+    });
+
+    // RECUPERACIÓN DE CONTRASEÑA.
+    recoveryForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        mostrarMensaje(
+            "La recuperación de contraseña estará disponible próximamente."
+        );
+    });
+
+    // Mostrar inicialmente el inicio de sesión.
+    mostrarFormulario("login");
 });

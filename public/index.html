@@ -29,17 +29,17 @@
 
                 <form id="loginForm" class="auth-form">
                     <div class="field">
-                        <label for="usuario">Usuario o correo electrónico</label>
-                        <input type="text" id="usuario" name="usuario"
-                               placeholder="Ej. juan.perez" autocomplete="username" required>
+                        <label for="usuario">Correo electrónico</label>
+                        <input type="email" id="usuario" name="usuario"
+                               placeholder="nombre@ejemplo.com" autocomplete="username" required>
                     </div>
                     <div class="field">
                         <label for="contrasena">Contraseña</label>
                         <div class="password-field">
                             <input type="password" id="contrasena" name="contrasena"
                                    placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
-                            <button type="button" class="password-toggle" aria-label="Mostrar contraseña"
-                                    aria-controls="contrasena"></button>
+                            <button type="button" class="password-toggle" data-toggle-password="contrasena"
+                                    aria-label="Mostrar contraseña" aria-pressed="false"></button>
                         </div>
                     </div>
                     <div class="form-options">
@@ -73,8 +73,8 @@
                         <div class="password-field">
                             <input type="password" id="registroContrasena" name="contrasena"
                                    placeholder="Mínimo 8 caracteres" minlength="8" autocomplete="new-password" required>
-                            <button type="button" class="password-toggle" aria-label="Mostrar contraseña"
-                                    aria-controls="registroContrasena"></button>
+                            <button type="button" class="password-toggle" data-toggle-password="registroContrasena"
+                                    aria-label="Mostrar contraseña" aria-pressed="false"></button>
                         </div>
                     </div>
                     <div class="field">
@@ -82,8 +82,8 @@
                         <div class="password-field">
                             <input type="password" id="confirmarContrasena" name="confirmarContrasena"
                                    placeholder="Repite tu contraseña" minlength="8" autocomplete="new-password" required>
-                            <button type="button" class="password-toggle" aria-label="Mostrar contraseña"
-                                    aria-controls="confirmarContrasena"></button>
+                            <button type="button" class="password-toggle" data-toggle-password="confirmarContrasena"
+                                    aria-label="Mostrar contraseña" aria-pressed="false"></button>
                         </div>
                     </div>
                     <button class="primary-button" type="submit">Crear cuenta</button>

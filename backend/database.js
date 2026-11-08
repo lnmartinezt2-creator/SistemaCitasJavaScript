@@ -2,10 +2,9 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
-// Ruta donde se almacenará la base de datos.
 const rutaDB = path.join(__dirname, "citas.db");
 
-// Crear o abrir la base de datos SQLite.
+
 const db = new sqlite3.Database(rutaDB, (error) => {
     if (error) {
         console.error("Error al conectar SQLite:", error.message);
@@ -14,7 +13,7 @@ const db = new sqlite3.Database(rutaDB, (error) => {
     }
 });
 
-// Crear la tabla de usuarios.
+
 db.run(`
     CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +23,7 @@ db.run(`
     )
 `);
 
-// Crear la tabla de pacientes.
+
 db.run(`
     CREATE TABLE IF NOT EXISTS pacientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +35,7 @@ db.run(`
     )
 `);
 
-// Crear la tabla de citas médicas.
+
 db.run(`
     CREATE TABLE IF NOT EXISTS citas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

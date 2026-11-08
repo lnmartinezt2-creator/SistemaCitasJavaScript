@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Citas</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #243b53; }
+        header { background: #355d78; color: white; padding: 20px 35px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 22px; margin: 0; }
+        .contenedor { max-width: 1150px; margin: 35px auto; padding: 0 20px; }
+        .panel { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px #00000012; }
+        .formulario, .barra-busqueda { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .campo { display: flex; flex-direction: column; gap: 7px; }
+        input, select, textarea { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; font-family: inherit; }
+        textarea { resize: vertical; }
+        button { background: #355d78; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #27465c; }
+        .volver { background: white; color: #355d78; }
+        .acciones { margin-top: 20px; display: flex; gap: 10px; }
+        .tabla-contenedor { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #e8f0f6; }
+        td button { margin: 3px; padding: 8px 12px; }
+        .cancelada { color: #b91c1c; font-weight: bold; }
+        #mensaje { margin-top: 15px; }
+        @media (max-width: 650px) { .formulario, .barra-busqueda { grid-template-columns: 1fr; } header { flex-direction: column; gap: 15px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gestión de Citas</h1>
+        <button class="volver" id="volver" type="button">Volver al Dashboard</button>
+    </header>
+    <main class="contenedor">
+        <section class="panel">
+            <h2 id="tituloFormulario">Registrar cita</h2>
+            <form id="formCita" class="formulario">
+                <input type="hidden" id="citaId">
+                <div class="campo"><label for="paciente_id">Paciente</label><select id="paciente_id" required></select></div>
+                <div class="campo"><label for="fecha">Fecha</label><input type="date" id="fecha" required></div>
+                <div class="campo"><label for="hora">Hora</label><input type="time" id="hora" required></div>
+                <div class="campo"><label for="estado">Estado</label><select id="estado"><option>Programada</option><option>Completada</option><option>Cancelada</option></select></div>
+                <div class="campo" style="grid-column: 1 / -1"><label for="motivo">Motivo de la consulta</label><textarea id="motivo" rows="3" required></textarea></div>
+                <div class="acciones"><button type="submit">Guardar cita</button><button type="button" id="cancelarEdicion" hidden>Cancelar</button></div>
+            </form>
+            <p id="mensaje" role="status"></p>
+        </section>
+        <section class="panel">
+            <h2>Citas registradas</h2>
+            <div class="barra-busqueda"><input id="buscar" placeholder="Buscar por paciente o fecha"><button id="buscarBtn" type="button">Buscar</button></div>
+            <div class="tabla-contenedor"><table><thead><tr><th>Paciente</th><th>Fecha</th><th>Hora</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="listaCitas"></tbody></table></div>
+        </section>
+    </main>
+    <script>
+        const formulario = document.getElementById("formCita");
+        const lista = document.getElementById("listaCitas");
+        const mensaje = document.getElementById("mensaje");
+        const campos = ["paciente_id", "fecha", "hora", "estado", "motivo"];
+        let citas = [];
+        const escapar = (valor) => String(valor ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[c]);
+        const mostrarMensaje = (texto, error = false) => { mensaje.textContent = texto; mensaje.style.color = error ? "#b91c1c" : "#166534"; };
+        async function cargarPacientes() {
+            const respuesta = await fetch("/api/pacientes?buscar=");
+            if (!respuesta.ok) throw new Error("No se pudieron cargar los pacientes.");
+            const pacientes = await respuesta.json();
+            document.getElementById("paciente_id").innerHTML = pacientes.length ? pacientes.map((p) => `<option value="${p.id}">${escapar(p.nombre)} - ${escapar(p.documento)}</option>`).join("") : '<option value="">Registra primero un paciente</option>';
+        }
+        async function cargarCitas() {
+            const buscar = encodeURIComponent(document.getElementById("buscar").value.trim());
+            const respuesta = await fetch(`/api/citas?buscar=${buscar}`);
+            if (!respuesta.ok) throw new Error("No se pudieron cargar las citas.");
+            citas = await respuesta.json();
+            lista.innerHTML = citas.length ? citas.map((c) => `<tr><td>${escapar(c.paciente)}</td><td>${escapar(c.fecha)}</td><td>${escapar(c.hora)}</td><td>${escapar(c.motivo)}</td><td class="${c.estado === "Cancelada" ? "cancelada" : ""}">${escapar(c.estado)}</td><td><button type="button" data-editar="${c.id}">Editar</button>${c.estado !== "Cancelada" ? `<button type="button" data-cancelar="${c.id}">Cancelar</button>` : ""}</td></tr>`).join("") : '<tr><td colspan="6">No hay citas registradas.</td></tr>';
+        }
+        function limpiarFormulario() { formulario.reset(); document.getElementById("citaId").value = ""; document.getElementById("tituloFormulario").textContent = "Registrar cita"; document.getElementById("cancelarEdicion").hidden = true; }
+        formulario.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const id = document.getElementById("citaId").value;
+            const datos = Object.fromEntries(campos.map((campo) => [campo, document.getElementById(campo).value]));
+            const respuesta = await fetch(id ? `/api/citas/${id}` : "/api/citas", { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+            const resultado = await respuesta.json(); mostrarMensaje(resultado.mensaje, !respuesta.ok);
+            if (respuesta.ok) { limpiarFormulario(); await cargarCitas(); }
+        });
+        lista.addEventListener("click", async (evento) => {
+            const editar = evento.target.dataset.editar;
+            const cancelar = evento.target.dataset.cancelar;
+            if (editar) {
+                const cita = citas.find((item) => item.id === Number(editar));
+                campos.forEach((campo) => { document.getElementById(campo).value = cita[campo]; });
+                document.getElementById("citaId").value = cita.id; document.getElementById("tituloFormulario").textContent = "Editar cita"; document.getElementById("cancelarEdicion").hidden = false; window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+            if (cancelar && confirm("¿Deseas cancelar esta cita?")) {
+                const respuesta = await fetch(`/api/citas/${cancelar}/cancelar`, { method: "PATCH" }); const resultado = await respuesta.json(); mostrarMensaje(resultado.mensaje, !respuesta.ok); if (respuesta.ok) await cargarCitas();
+            }
+        });
+        document.getElementById("cancelarEdicion").addEventListener("click", limpiarFormulario);
+        document.getElementById("buscarBtn").addEventListener("click", cargarCitas);
+        document.getElementById("buscar").addEventListener("input", cargarCitas);
+        document.getElementById("volver").addEventListener("click", () => { window.location.href = "/dashboarrd.html"; });
+        Promise.all([cargarPacientes(), cargarCitas()]).catch((error) => mostrarMensaje(error.message, true));
+    </script>
+</body>
+</html>
